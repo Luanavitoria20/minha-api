@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Tarefas</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f0ff;
+      display: flex;
+      justify-content: center;
+      padding: 50px 15px;
+    }
+
+    .container {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 5px 20px #0001;
+    }
+
+    h1 {
+      color: #6c4ccf;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #6c4ccf;
+      color: white;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    li span {
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
+
+    li.concluida span {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .excluir {
+      background: #dc4c64;
+    }
+
+    #mensagem {
+      color: #6c4ccf;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Minhas Tarefas 💜</h1>
+
+    <form id="formTarefa">
+      <input id="nomeTarefa" placeholder="Digite uma tarefa..." required>
+      <button type="submit">Adicionar</button>
+    </form>
+
+    <p id="mensagem"></p>
+    <ul id="listaTarefas"></ul>
+  </main>
+
+  <script>
+    const API = 'http://localhost:3000/tasks';
+    const formulario = document.getElementById('formTarefa');
+    const campo = document.getElementById('nomeTarefa');
+    const lista = document.getElementById('listaTarefas');
+    const mensagem = document.getElementById('mensagem');
+
+    async function carregarTarefas() {
+      try {
+        const resposta = await fetch(API);
+
+        if (!resposta.ok) {
+          throw new Error('Não foi possível carregar as tarefas.');
+        }
+
+        const tarefas = await resposta.json();
+        lista.replaceChildren();
+
+        tarefas.forEach(tarefa => {
+          const item = document.createElement('li');
+          const nome = document.createElement('span');
+          nome.textContent = tarefa.nome;
+
+          if (tarefa.concluida) {
+            item.classList.add('concluida');
+          }
+
+          const concluir = document.createElement('button');
+          concluir.textContent = tarefa.concluida ? 'Concluída' : 'Concluir';
+          concluir.disabled = tarefa.concluida;
+
+          concluir.addEventListener('click', async () => {
+            await executar(`${API}/${tarefa.id}/concluir`, 'PATCH');
+          });
+
+          const excluir = document.createElement('button');
+          excluir.textContent = 'Excluir';
+          excluir.className = 'excluir';
+
+          excluir.addEventListener('click', async () => {
+            await executar(`${API}/${tarefa.id}`, 'DELETE');
+          });
+
+          item.append(nome, concluir, excluir);
+          lista.appendChild(item);
+        });
+      } catch (erro) {
+        mensagem.textContent =
+          'Não consegui conectar à API. Confira se ela está rodando.';
+      }
+    }
+
+    async function executar(url, metodo) {
+      try {
+        mensagem.textContent = '';
+        const resposta = await fetch(url, { method: metodo });
+
+        if (!resposta.ok) {
+          throw new Error('A operação não foi concluída.');
+        }
+
+        await carregarTarefas();
+      } catch (erro) {
+        mensagem.textContent = 'Erro ao executar a operação.';
+      }
+    }
+
+    formulario.addEventListener('submit', async evento => {
+      evento.preventDefault();
+
+      const nome = campo.value.trim();
+      if (!nome) return;
+
+      try {
+        mensagem.textContent = '';
+
+        const resposta = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome })
+        });
+
+        if (!resposta.ok) {
+          throw new Error('Não foi possível adicionar a tarefa.');
+        }
+
+        campo.value = '';
+        await carregarTarefas();
+      } catch (erro) {
+        mensagem.textContent = 'Erro ao adicionar. Confira se a API está rodando.';
+      }
+    });
+
+    carregarTarefas();
+  </script>
+</body>
+</html>
