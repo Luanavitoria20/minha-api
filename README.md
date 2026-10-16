@@ -106,3 +106,11 @@ Cada linha de código é mais um passo nessa jornada. 🚀
 <p align="center">
   🌷 <strong>Um passo de cada vez, um código de cada vez!</strong> 🦋
 </p>
+
+<p align="center">
+  <img src="./foto-luana.jpg" alt="Foto da Luana" width="180" />
+  <br />
+  <strong>💜 Luana Vitoria 🦋</strong>
+  <br />
+  ✨ Aprendendo e evoluindo na programação! ✨
+</p>
